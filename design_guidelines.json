@@ -1,0 +1,166 @@
+{
+  "project_name": "Dental Implant Detector",
+  "domain": "Medical AI",
+  "theme": "dark",
+  "archetype": "Archetype 4 (Swiss & High-Contrast)",
+  "emotional_tone": "Clinical, precise, authoritative, high-tech, trustworthy",
+  "fonts": {
+    "heading": "Cabinet Grotesk",
+    "heading_fallback": "sans-serif",
+    "body": "IBM Plex Sans",
+    "body_fallback": "sans-serif",
+    "mono": "JetBrains Mono",
+    "rules": [
+      "NO Inter, Roboto, Open Sans, Lato, or Syne.",
+      "Headings (H1, H2) MUST use tight letter spacing: tracking-tight or tracking-tighter.",
+      "Overlines / Labels MUST be Uppercase + Tiny + Wide Spacing (tracking-[0.2em]).",
+      "Line Height: Tight (leading-none) for headers, Loose (leading-relaxed) for body.",
+      "H1 Maximum size: text-4xl sm:text-5xl lg:text-6xl. DO NOT exceed."
+    ]
+  },
+  "colors": {
+    "background": {
+      "base": "bg-zinc-950",
+      "surface": "bg-zinc-900",
+      "surface_elevated": "bg-zinc-800"
+    },
+    "text": {
+      "primary": "text-zinc-50",
+      "secondary": "text-zinc-400",
+      "muted": "text-zinc-500",
+      "inverse": "text-zinc-950"
+    },
+    "border": {
+      "default": "border-zinc-800",
+      "hover": "border-zinc-700",
+      "focus": "border-zinc-600"
+    },
+    "brand_accent": {
+      "primary": "bg-zinc-50 text-zinc-950",
+      "primary_hover": "bg-zinc-200",
+      "secondary": "bg-zinc-800 text-zinc-50",
+      "secondary_hover": "bg-zinc-700"
+    },
+    "status": {
+      "implant_detected": {
+        "bg": "bg-emerald-500/10",
+        "text": "text-emerald-400",
+        "border": "border-emerald-500/20",
+        "indicator": "bg-emerald-500"
+      },
+      "no_implant": {
+        "bg": "bg-rose-500/10",
+        "text": "text-rose-400",
+        "border": "border-rose-500/20",
+        "indicator": "bg-rose-500"
+      },
+      "info": {
+        "bg": "bg-blue-500/10",
+        "text": "text-blue-400",
+        "border": "border-blue-500/20",
+        "indicator": "bg-blue-500"
+      }
+    },
+    "rules": [
+      "Color is Function Only. 95% of the UI should be monochrome.",
+      "Use pure black/white for maximum contrast data display.",
+      "Never use pure #000000; the zinc scale adds a slight tint that feels clinical."
+    ]
+  },
+  "layout_and_spacing": {
+    "system": "The Control Room Grid",
+    "spacing_scale": "p-1, p-2, p-4, p-6, p-8, p-12",
+    "border_radius": "Sharp or max 8px (rounded-none or rounded-md). No pill-shaped buttons.",
+    "grid_strategy": "Base Grid: grid-cols-1 lg:grid-cols-12, Tight Gap (gap-4 or gap-6). Use bento-style spans.",
+    "rules": [
+      "Every pixel must be utilized. Use h-full on children to ensure they stretch to match their neighbors.",
+      "Containers with borders MUST have internal padding (p-6) to prevent text collision.",
+      "Optical Alignment over geometrical alignment."
+    ]
+  },
+  "surfaces": {
+    "dashboard_cards": {
+      "style": "GRID BORDERS (The 'Technical' Look)",
+      "classes": "bg-zinc-950 border border-zinc-800 rounded-md shadow-sm overflow-hidden",
+      "hover_classes": "transition-all duration-200 hover:border-zinc-700"
+    },
+    "developer_json_view": {
+      "style": "RETRO-FUTURISM (The 'Terminal' Look)",
+      "classes": "bg-zinc-950 border border-zinc-800 rounded-md font-mono text-xs overflow-auto p-4 text-zinc-400",
+      "glow_text": "text-emerald-400/90"
+    },
+    "headers_and_nav": {
+      "style": "Solid Background with hard bottom border.",
+      "classes": "bg-zinc-950 border-b border-zinc-800 z-50 sticky top-0"
+    }
+  },
+  "components": {
+    "upload_zone": {
+      "description": "A prominent dashed-border zone with an upload icon.",
+      "classes": "border-2 border-dashed border-zinc-800 rounded-md p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:border-zinc-600 transition-colors hover:bg-zinc-900/50",
+      "drag_active_classes": "border-emerald-500/50 bg-emerald-500/5"
+    },
+    "image_preview": {
+      "description": "Displays the uploaded X-ray. It MUST maintain aspect ratio. A simulated 'scanning line' animation should overlay the image when the Roboflow prediction is fetching.",
+      "container_classes": "relative w-full rounded-md overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center"
+    },
+    "confidence_bar": {
+      "description": "A horizontal progress bar to display the AI confidence score.",
+      "track_classes": "h-2 w-full bg-zinc-800 rounded-none overflow-hidden",
+      "fill_classes": "h-full bg-zinc-50 transition-all duration-500 ease-out"
+    },
+    "buttons": {
+      "primary": "bg-zinc-50 text-zinc-950 hover:bg-zinc-200 h-10 px-4 rounded-md font-medium tracking-tight inline-flex items-center justify-center transition-colors",
+      "secondary": "bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 h-10 px-4 rounded-md font-medium tracking-tight inline-flex items-center justify-center transition-colors"
+    }
+  },
+  "interactions_and_motion": {
+    "scanning_animation": "Animate a highly visible cyan/white line moving top to bottom over the image preview during analysis.",
+    "hover_states": "ALL interactive elements MUST have explicit hover states (e.g., hover:bg-zinc-800 hover:text-white). Focus states must have higher contrast.",
+    "staggered_lists": "History table items should fade in and slide up slightly on load."
+  },
+  "media": {
+    "icons": {
+      "library": "lucide-react",
+      "instructions": "Use lucide-react for all interface icons. Key icons: UploadCloud, Scan, Activity, History, Download, Code, CheckCircle, XCircle."
+    },
+    "images": [
+      {
+        "category": "placeholder_xray",
+        "url": "https://images.unsplash.com/photo-1522849696084-818b29dfe210?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxkZW50YWwlMjB4JTIwcmF5fGVufDB8fHx8MTc3NjMxNDQ1OXww&ixlib=rb-4.1.0&q=85",
+        "description": "Dental X-ray image for testing or empty states."
+      },
+      {
+        "category": "abstract_medical_bg",
+        "url": "https://images.unsplash.com/photo-1771774982253-adcc7715b8f6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGRhcmslMjBtZWRpY2FsJTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3NzYzMTQ0NzR8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract dark medical background. Use subtly if needed for landing page or auth screens."
+      }
+    ]
+  },
+  "features_implementation_rules": {
+    "roboflow_integration": {
+      "rule": "Keep modular. Create a service file. Ensure 'ROBOFLOW_API_KEY' and 'ROBOFLOW_MODEL_ID' are expected from .env. Show exact place for config.",
+      "logic": "If predictions array empty -> show 'No implant detected' with negative status color. If implant_present in predictions -> show 'Implant detected' with positive status color. Display confidence % clearly."
+    },
+    "pdf_export": {
+      "rule": "Use window.print() triggered by an action button, and use a specialized print stylesheet (@media print) to hide nav/sidebar and strictly print the image + result + confidence + timestamp in a clean layout."
+    },
+    "history": {
+      "rule": "Store upload timestamp, prediction outcome, and confidence in the backend database. Allow viewing past records in a dense, tabular format using 'Control Room' grid styling."
+    },
+    "developer_view": {
+      "rule": "The raw JSON response from Roboflow must be viewable in a collapsible or dedicated 'Developer Mode' container styled like a dark terminal."
+    }
+  },
+  "testing_attributes": {
+    "rule": "All interactive and key informational elements MUST include a data-testid attribute in kebab-case (e.g., data-testid='upload-input', data-testid='analyze-button')."
+  },
+  "instructions_to_main_agent": [
+    "Read this full JSON file before starting.",
+    "Install and use 'lucide-react' for all icons.",
+    "Add 'Cabinet Grotesk' and 'IBM Plex Sans' via Google Fonts or an open-source font provider.",
+    "Implement the 'Control Room' dense grid architecture for the dashboard view.",
+    "Ensure 'data-testid' is added to everything interactive.",
+    "Ensure the layout strictly uses Tailwind CSS and follows the precise zinc-scale monochrome palette outlined above, avoiding generic blue/purple saas defaults."
+  ]
+}
