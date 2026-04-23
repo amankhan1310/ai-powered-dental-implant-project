@@ -11,9 +11,8 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 from inference_sdk import InferenceHTTPClient
-import requests
 import tempfile
-import base64
+import mimetypes
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -27,11 +26,8 @@ api_router = APIRouter(prefix="/api")
 
 ROBOFLOW_API_KEY = os.environ.get('ROBOFLOW_API_KEY')
 ROBOFLOW_MODEL_ID = os.environ.get('ROBOFLOW_MODEL_ID')
-EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
-STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
+UPLOADS_DIR = Path(os.environ.get('UPLOADS_DIR', str(ROOT_DIR / 'uploads')))
 APP_NAME = "dental-implant-detector"
-
-storage_key = None
 
 class Detection(BaseModel):
     x: float
@@ -54,51 +50,29 @@ class PredictionResult(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 def init_storage():
-    global storage_key
-    if storage_key:
-        return storage_key
-    try:
-        resp = requests.post(
-            f"{STORAGE_URL}/init",
-            json={"emergent_key": EMERGENT_LLM_KEY},
-            timeout=30
-        )
-        resp.raise_for_status()
-        storage_key = resp.json()["storage_key"]
-        logging.info("Storage initialized successfully")
-        return storage_key
-    except Exception as e:
-        logging.error(f"Storage init failed: {e}")
-        raise
+    """Create local uploads directory if it doesn't exist."""
+    UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    logging.info(f"Local storage ready at {UPLOADS_DIR}")
 
 def put_object(path: str, data: bytes, content_type: str) -> dict:
-    key = init_storage()
-    resp = requests.put(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key, "Content-Type": content_type},
-        data=data,
-        timeout=120
-    )
-    resp.raise_for_status()
-    return resp.json()
+    """Write file to local disk. Returns dict with path and size."""
+    full_path = UPLOADS_DIR / path
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+    full_path.write_bytes(data)
+    return {"path": path, "size": len(data)}
 
 def get_object(path: str) -> tuple:
-    key = init_storage()
-    resp = requests.get(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key},
-        timeout=60
-    )
-    resp.raise_for_status()
-    return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
+    """Read file from local disk. Returns (bytes, content_type)."""
+    full_path = UPLOADS_DIR / path
+    if not full_path.is_file():
+        raise FileNotFoundError(f"File not found: {path}")
+    content_type = mimetypes.guess_type(str(full_path))[0] or "application/octet-stream"
+    return full_path.read_bytes(), content_type
 
 @app.on_event("startup")
 async def startup():
-    try:
-        init_storage()
-        logging.info("Application started successfully")
-    except Exception as e:
-        logging.error(f"Startup failed: {e}")
+    init_storage()
+    logging.info("Application started successfully")
 
 @api_router.post("/upload-and-detect")
 async def upload_and_detect(file: UploadFile = File(...)):
