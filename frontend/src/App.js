@@ -85,8 +85,6 @@ function UploadPage() {
     }
   };
 
-  const [exporting] = useState(false);
-
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50">
       <Navigation />
@@ -170,16 +168,15 @@ function UploadPage() {
                 </h2>
               </div>
               <div className="flex gap-2">
-                <a
-                  href={`${API}/prediction/${result.id}/pdf`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 h-10 px-4 rounded-md font-medium tracking-tight inline-flex items-center justify-center transition-colors text-sm"
+                <Button
+                  onClick={() => { window.location.href = `${API}/prediction/${result.id}/pdf`; }}
+                  variant="secondary"
+                  className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
                   data-testid="export-pdf-button"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Export PDF
-                </a>
+                </Button>
                 <Button
                   onClick={() => {
                     setSelectedFile(null);
@@ -415,8 +412,6 @@ function ResultDetailPage() {
     }
   };
 
-  const [exporting] = useState(false);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-50">
@@ -451,16 +446,15 @@ function ResultDetailPage() {
                 Detection Results
               </h2>
             </div>
-            <a
-              href={`${API}/prediction/${result.id}/pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 h-10 px-4 rounded-md font-medium tracking-tight inline-flex items-center justify-center transition-colors text-sm"
+            <Button
+              onClick={() => { window.location.href = `${API}/prediction/${result.id}/pdf`; }}
+              variant="secondary"
+              className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
               data-testid="export-pdf-button"
             >
               <Download className="w-4 h-4 mr-2" />
               Export PDF
-            </a>
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
