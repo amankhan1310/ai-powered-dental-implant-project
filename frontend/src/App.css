@@ -25,3 +25,81 @@ h1, h2, h3, h4, h5, h6 {
 pre, code {
   font-family: 'JetBrains Mono', monospace;
 }
+
+/* Print styles for PDF export */
+@media print {
+  /* Hide everything we don't want printed */
+  nav,
+  .no-print,
+  [data-testid="new-scan-button"],
+  [data-testid="toggle-dev-view"],
+  [data-testid="upload-zone"],
+  [data-testid="upload-input"] {
+    display: none !important;
+  }
+
+  /* Reset dark theme for clean print */
+  body,
+  .App,
+  div {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Clean up borders */
+  * {
+    border-color: #e5e7eb !important;
+  }
+
+  /* Make status text visible on print */
+  .text-emerald-400 {
+    color: #059669 !important;
+  }
+  .text-rose-400 {
+    color: #e11d48 !important;
+  }
+  .text-zinc-400,
+  .text-zinc-500 {
+    color: #6b7280 !important;
+  }
+  .text-zinc-50 {
+    color: #111827 !important;
+  }
+
+  /* Status boxes */
+  .bg-emerald-500\/10 {
+    background: #ecfdf5 !important;
+    border-color: #059669 !important;
+  }
+  .bg-rose-500\/10 {
+    background: #fff1f2 !important;
+    border-color: #e11d48 !important;
+  }
+
+  /* Progress bar */
+  [data-testid="confidence-bar"] {
+    background: #e5e7eb !important;
+  }
+
+  /* Make images fit the page */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Add report header for print */
+  #result-container::before {
+    content: "Dental Implant Detection Report";
+    display: block;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'Cabinet Grotesk', sans-serif;
+    margin-bottom: 16px;
+    color: black !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 1.5cm;
+  }
+}

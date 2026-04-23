@@ -169,9 +169,9 @@ function UploadPage() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  onClick={() => { window.location.href = `${API}/prediction/${result.id}/pdf`; }}
+                  onClick={() => window.print()}
                   variant="secondary"
-                  className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
+                  className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 no-print"
                   data-testid="export-pdf-button"
                 >
                   <Download className="w-4 h-4 mr-2" />
@@ -184,7 +184,7 @@ function UploadPage() {
                     setResult(null);
                   }}
                   variant="secondary"
-                  className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
+                  className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 no-print"
                   data-testid="new-scan-button"
                 >
                   New Scan
@@ -447,9 +447,9 @@ function ResultDetailPage() {
               </h2>
             </div>
             <Button
-              onClick={() => { window.location.href = `${API}/prediction/${result.id}/pdf`; }}
+              onClick={() => window.print()}
               variant="secondary"
-              className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
+              className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 no-print"
               data-testid="export-pdf-button"
             >
               <Download className="w-4 h-4 mr-2" />
