@@ -3,12 +3,104 @@ import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "reac
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, Scan, History, Download, Code, CheckCircle, XCircle, Activity } from "lucide-react";
+import { UploadCloud, Scan, History, Download, Code, CheckCircle, XCircle, Activity, ExternalLink, Loader2, Copy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+function PdfExportButton({ predictionId }) {
+  const [showFallback, setShowFallback] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const pdfUrl = `${API}/prediction/${predictionId}/pdf`;
+
+  const handleExport = async () => {
+    setExporting(true);
+    setShowFallback(false);
+
+    try {
+      // Strategy 1: Fetch blob and trigger download via anchor
+      const response = await fetch(pdfUrl);
+      if (!response.ok) throw new Error('PDF fetch failed');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dental-report-${predictionId}.pdf`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+
+      // Check if download actually started (heuristic: small delay)
+      await new Promise(r => setTimeout(r, 1500));
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // If we're in a sandboxed iframe, the click was likely blocked silently.
+      // Show fallback link after a brief pause so the user has an escape hatch.
+      setShowFallback(true);
+    } catch (err) {
+      console.error('[PDF] Export failed:', err);
+      setShowFallback(true);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(pdfUrl).catch(() => {});
+  };
+
+  return (
+    <div className="relative no-print">
+      <Button
+        onClick={handleExport}
+        disabled={exporting}
+        variant="secondary"
+        className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
+        data-testid="export-pdf-button"
+      >
+        {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+        {exporting ? 'Preparing...' : 'Export PDF'}
+      </Button>
+
+      {showFallback && (
+        <div className="absolute right-0 top-12 z-50 w-80 bg-zinc-900 border border-zinc-700 rounded-md p-4 shadow-xl" data-testid="pdf-fallback-box">
+          <p className="text-xs text-zinc-400 mb-3" style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}>
+            If the PDF didn't download automatically, use the direct link below:
+          </p>
+          <div className="flex gap-2">
+            <a
+              href={pdfUrl}
+              className="flex-1 bg-zinc-50 text-zinc-950 hover:bg-zinc-200 h-9 px-3 rounded-md font-medium text-xs inline-flex items-center justify-center transition-colors"
+              data-testid="pdf-direct-link"
+            >
+              <ExternalLink className="w-3 h-3 mr-1.5" />
+              Open PDF
+            </a>
+            <Button
+              onClick={copyLink}
+              variant="secondary"
+              size="sm"
+              className="bg-zinc-800 text-zinc-50 hover:bg-zinc-700 border border-zinc-700 h-9 px-3"
+              data-testid="pdf-copy-link"
+            >
+              <Copy className="w-3 h-3 mr-1.5" />
+              Copy Link
+            </Button>
+          </div>
+          <button
+            onClick={() => setShowFallback(false)}
+            className="absolute top-2 right-2 text-zinc-500 hover:text-zinc-300 text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Navigation() {
   return (
@@ -168,15 +260,7 @@ function UploadPage() {
                 </h2>
               </div>
               <div className="flex gap-2">
-                <Button
-                  onClick={() => window.print()}
-                  variant="secondary"
-                  className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 no-print"
-                  data-testid="export-pdf-button"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export PDF
-                </Button>
+                <PdfExportButton predictionId={result.id} />
                 <Button
                   onClick={() => {
                     setSelectedFile(null);
@@ -446,15 +530,7 @@ function ResultDetailPage() {
                 Detection Results
               </h2>
             </div>
-            <Button
-              onClick={() => window.print()}
-              variant="secondary"
-              className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 no-print"
-              data-testid="export-pdf-button"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export PDF
-            </Button>
+            <PdfExportButton predictionId={result.id} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
