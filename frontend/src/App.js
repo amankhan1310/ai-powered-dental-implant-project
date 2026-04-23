@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "reac
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, Scan, History, Download, Code, CheckCircle, XCircle, Activity, Loader2 } from "lucide-react";
+import { UploadCloud, Scan, History, Download, Code, CheckCircle, XCircle, Activity } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -85,33 +85,7 @@ function UploadPage() {
     }
   };
 
-  const [exporting, setExporting] = useState(false);
-
-  const exportToPDF = async () => {
-    setExporting(true);
-    try {
-      const response = await axios.get(`${API}/prediction/${result.id}/pdf`, {
-        responseType: 'blob',
-      });
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `dental-report-${result.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      console.log('[PDF] Server-side PDF downloaded');
-    } catch (err) {
-      console.error('[PDF] Download failed:', err);
-      // Fallback: open in new tab so browser handles it directly
-      window.open(`${API}/prediction/${result.id}/pdf`, '_blank');
-      console.log('[PDF] Fallback: opened PDF in new tab');
-    } finally {
-      setExporting(false);
-    }
-  };
+  const [exporting] = useState(false);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50">
@@ -196,16 +170,16 @@ function UploadPage() {
                 </h2>
               </div>
               <div className="flex gap-2">
-                <Button
-                  onClick={exportToPDF}
-                  disabled={exporting}
-                  variant="secondary"
-                  className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
+                <a
+                  href={`${API}/prediction/${result.id}/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 h-10 px-4 rounded-md font-medium tracking-tight inline-flex items-center justify-center transition-colors text-sm"
                   data-testid="export-pdf-button"
                 >
-                  {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-                  {exporting ? 'Exporting...' : 'Export PDF'}
-                </Button>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export PDF
+                </a>
                 <Button
                   onClick={() => {
                     setSelectedFile(null);
@@ -441,32 +415,7 @@ function ResultDetailPage() {
     }
   };
 
-  const [exporting, setExporting] = useState(false);
-
-  const exportToPDF = async () => {
-    setExporting(true);
-    try {
-      const response = await axios.get(`${API}/prediction/${result.id}/pdf`, {
-        responseType: 'blob',
-      });
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `dental-report-${result.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      console.log('[PDF] Server-side PDF downloaded');
-    } catch (err) {
-      console.error('[PDF] Download failed:', err);
-      window.open(`${API}/prediction/${result.id}/pdf`, '_blank');
-      console.log('[PDF] Fallback: opened PDF in new tab');
-    } finally {
-      setExporting(false);
-    }
-  };
+  const [exporting] = useState(false);
 
   if (loading) {
     return (
@@ -502,16 +451,16 @@ function ResultDetailPage() {
                 Detection Results
               </h2>
             </div>
-            <Button
-              onClick={exportToPDF}
-              disabled={exporting}
-              variant="secondary"
-              className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
+            <a
+              href={`${API}/prediction/${result.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800 h-10 px-4 rounded-md font-medium tracking-tight inline-flex items-center justify-center transition-colors text-sm"
               data-testid="export-pdf-button"
             >
-              {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-              {exporting ? 'Exporting...' : 'Export PDF'}
-            </Button>
+              <Download className="w-4 h-4 mr-2" />
+              Export PDF
+            </a>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
