@@ -87,22 +87,55 @@ function UploadPage() {
   };
 
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text('Dental Implant Detection Report', 20, 20);
-    
-    doc.setFontSize(12);
-    doc.text(`Date: ${new Date(result.timestamp).toLocaleString()}`, 20, 35);
-    doc.text(`Filename: ${result.original_filename}`, 20, 45);
-    doc.text(`Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`, 20, 55);
-    
-    if (result.confidence) {
-      doc.text(`Confidence: ${(result.confidence * 100).toFixed(1)}%`, 20, 65);
+    const filename = `dental-report-${result.id}.pdf`;
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(20);
+      doc.text('Dental Implant Detection Report', 20, 20);
+
+      doc.setFontSize(12);
+      doc.text(`Date: ${new Date(result.timestamp).toLocaleString()}`, 20, 35);
+      doc.text(`Filename: ${result.original_filename}`, 20, 45);
+      doc.text(`Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`, 20, 55);
+
+      if (result.confidence) {
+        doc.text(`Confidence: ${(result.confidence * 100).toFixed(1)}%`, 20, 65);
+      }
+
+      doc.text(`Total Detections: ${result.detections.length}`, 20, 75);
+
+      // Primary: explicit blob + anchor download
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      console.log('[PDF] Download triggered via blob anchor');
+    } catch (err) {
+      console.error('[PDF] jsPDF primary path failed:', err);
+      // Fallback: build a plain-text file so the user always gets *something*
+      try {
+        const lines = [
+          'Dental Implant Detection Report',
+          `Date: ${new Date(result.timestamp).toLocaleString()}`,
+          `Filename: ${result.original_filename}`,
+          `Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`,
+          result.confidence ? `Confidence: ${(result.confidence * 100).toFixed(1)}%` : '',
+          `Total Detections: ${result.detections.length}`,
+        ].filter(Boolean).join('\n');
+        const blob = new Blob([lines], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        console.log('[PDF] Fallback plain-text download opened');
+      } catch (fallbackErr) {
+        console.error('[PDF] Fallback also failed:', fallbackErr);
+      }
     }
-    
-    doc.text(`Total Detections: ${result.detections.length}`, 20, 75);
-    
-    doc.save(`dental-report-${result.id}.pdf`);
   };
 
   return (
@@ -433,22 +466,53 @@ function ResultDetailPage() {
   };
 
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text('Dental Implant Detection Report', 20, 20);
-    
-    doc.setFontSize(12);
-    doc.text(`Date: ${new Date(result.timestamp).toLocaleString()}`, 20, 35);
-    doc.text(`Filename: ${result.original_filename}`, 20, 45);
-    doc.text(`Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`, 20, 55);
-    
-    if (result.confidence) {
-      doc.text(`Confidence: ${(result.confidence * 100).toFixed(1)}%`, 20, 65);
+    const filename = `dental-report-${result.id}.pdf`;
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(20);
+      doc.text('Dental Implant Detection Report', 20, 20);
+
+      doc.setFontSize(12);
+      doc.text(`Date: ${new Date(result.timestamp).toLocaleString()}`, 20, 35);
+      doc.text(`Filename: ${result.original_filename}`, 20, 45);
+      doc.text(`Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`, 20, 55);
+
+      if (result.confidence) {
+        doc.text(`Confidence: ${(result.confidence * 100).toFixed(1)}%`, 20, 65);
+      }
+
+      doc.text(`Total Detections: ${result.detections.length}`, 20, 75);
+
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      console.log('[PDF] Download triggered via blob anchor');
+    } catch (err) {
+      console.error('[PDF] jsPDF primary path failed:', err);
+      try {
+        const lines = [
+          'Dental Implant Detection Report',
+          `Date: ${new Date(result.timestamp).toLocaleString()}`,
+          `Filename: ${result.original_filename}`,
+          `Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`,
+          result.confidence ? `Confidence: ${(result.confidence * 100).toFixed(1)}%` : '',
+          `Total Detections: ${result.detections.length}`,
+        ].filter(Boolean).join('\n');
+        const blob = new Blob([lines], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        console.log('[PDF] Fallback plain-text download opened');
+      } catch (fallbackErr) {
+        console.error('[PDF] Fallback also failed:', fallbackErr);
+      }
     }
-    
-    doc.text(`Total Detections: ${result.detections.length}`, 20, 75);
-    
-    doc.save(`dental-report-${result.id}.pdf`);
   };
 
   if (loading) {
