@@ -30,6 +30,7 @@ filelock==3.25.2
 filetype==1.2.0
 flake8==7.3.0
 fonttools==4.62.1
+fpdf2==2.8.7
 frozenlist==1.8.0
 fsspec==2026.3.0
 google-ai-generativelanguage==0.6.15

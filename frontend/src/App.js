@@ -3,10 +3,9 @@ import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "reac
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, Scan, History, Download, Code, CheckCircle, XCircle, Activity } from "lucide-react";
+import { UploadCloud, Scan, History, Download, Code, CheckCircle, XCircle, Activity, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { jsPDF } from "jspdf";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -86,55 +85,31 @@ function UploadPage() {
     }
   };
 
-  const exportToPDF = () => {
-    const filename = `dental-report-${result.id}.pdf`;
+  const [exporting, setExporting] = useState(false);
+
+  const exportToPDF = async () => {
+    setExporting(true);
     try {
-      const doc = new jsPDF();
-      doc.setFontSize(20);
-      doc.text('Dental Implant Detection Report', 20, 20);
-
-      doc.setFontSize(12);
-      doc.text(`Date: ${new Date(result.timestamp).toLocaleString()}`, 20, 35);
-      doc.text(`Filename: ${result.original_filename}`, 20, 45);
-      doc.text(`Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`, 20, 55);
-
-      if (result.confidence) {
-        doc.text(`Confidence: ${(result.confidence * 100).toFixed(1)}%`, 20, 65);
-      }
-
-      doc.text(`Total Detections: ${result.detections.length}`, 20, 75);
-
-      // Primary: explicit blob + anchor download
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
+      const response = await axios.get(`${API}/prediction/${result.id}/pdf`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = filename;
+      a.download = `dental-report-${result.id}.pdf`;
       document.body.appendChild(a);
       a.click();
+      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      console.log('[PDF] Download triggered via blob anchor');
+      console.log('[PDF] Server-side PDF downloaded');
     } catch (err) {
-      console.error('[PDF] jsPDF primary path failed:', err);
-      // Fallback: build a plain-text file so the user always gets *something*
-      try {
-        const lines = [
-          'Dental Implant Detection Report',
-          `Date: ${new Date(result.timestamp).toLocaleString()}`,
-          `Filename: ${result.original_filename}`,
-          `Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`,
-          result.confidence ? `Confidence: ${(result.confidence * 100).toFixed(1)}%` : '',
-          `Total Detections: ${result.detections.length}`,
-        ].filter(Boolean).join('\n');
-        const blob = new Blob([lines], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-        console.log('[PDF] Fallback plain-text download opened');
-      } catch (fallbackErr) {
-        console.error('[PDF] Fallback also failed:', fallbackErr);
-      }
+      console.error('[PDF] Download failed:', err);
+      // Fallback: open in new tab so browser handles it directly
+      window.open(`${API}/prediction/${result.id}/pdf`, '_blank');
+      console.log('[PDF] Fallback: opened PDF in new tab');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -223,12 +198,13 @@ function UploadPage() {
               <div className="flex gap-2">
                 <Button
                   onClick={exportToPDF}
+                  disabled={exporting}
                   variant="secondary"
                   className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
                   data-testid="export-pdf-button"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export PDF
+                  {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                  {exporting ? 'Exporting...' : 'Export PDF'}
                 </Button>
                 <Button
                   onClick={() => {
@@ -465,53 +441,30 @@ function ResultDetailPage() {
     }
   };
 
-  const exportToPDF = () => {
-    const filename = `dental-report-${result.id}.pdf`;
+  const [exporting, setExporting] = useState(false);
+
+  const exportToPDF = async () => {
+    setExporting(true);
     try {
-      const doc = new jsPDF();
-      doc.setFontSize(20);
-      doc.text('Dental Implant Detection Report', 20, 20);
-
-      doc.setFontSize(12);
-      doc.text(`Date: ${new Date(result.timestamp).toLocaleString()}`, 20, 35);
-      doc.text(`Filename: ${result.original_filename}`, 20, 45);
-      doc.text(`Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`, 20, 55);
-
-      if (result.confidence) {
-        doc.text(`Confidence: ${(result.confidence * 100).toFixed(1)}%`, 20, 65);
-      }
-
-      doc.text(`Total Detections: ${result.detections.length}`, 20, 75);
-
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
+      const response = await axios.get(`${API}/prediction/${result.id}/pdf`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = filename;
+      a.download = `dental-report-${result.id}.pdf`;
       document.body.appendChild(a);
       a.click();
+      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      console.log('[PDF] Download triggered via blob anchor');
+      console.log('[PDF] Server-side PDF downloaded');
     } catch (err) {
-      console.error('[PDF] jsPDF primary path failed:', err);
-      try {
-        const lines = [
-          'Dental Implant Detection Report',
-          `Date: ${new Date(result.timestamp).toLocaleString()}`,
-          `Filename: ${result.original_filename}`,
-          `Result: ${result.implant_detected ? 'IMPLANT DETECTED' : 'NO IMPLANT DETECTED'}`,
-          result.confidence ? `Confidence: ${(result.confidence * 100).toFixed(1)}%` : '',
-          `Total Detections: ${result.detections.length}`,
-        ].filter(Boolean).join('\n');
-        const blob = new Blob([lines], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-        console.log('[PDF] Fallback plain-text download opened');
-      } catch (fallbackErr) {
-        console.error('[PDF] Fallback also failed:', fallbackErr);
-      }
+      console.error('[PDF] Download failed:', err);
+      window.open(`${API}/prediction/${result.id}/pdf`, '_blank');
+      console.log('[PDF] Fallback: opened PDF in new tab');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -551,11 +504,13 @@ function ResultDetailPage() {
             </div>
             <Button
               onClick={exportToPDF}
+              disabled={exporting}
               variant="secondary"
               className="bg-zinc-900 text-zinc-50 hover:bg-zinc-800 border border-zinc-800"
+              data-testid="export-pdf-button"
             >
-              <Download className="w-4 h-4 mr-2" />
-              Export PDF
+              {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+              {exporting ? 'Exporting...' : 'Export PDF'}
             </Button>
           </div>
 

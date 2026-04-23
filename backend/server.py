@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, File, UploadFile, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -217,6 +217,78 @@ async def get_prediction(prediction_id: str):
         prediction['timestamp'] = datetime.fromisoformat(prediction['timestamp']).isoformat()
     
     return prediction
+
+@api_router.get("/prediction/{prediction_id}/pdf")
+async def get_prediction_pdf(prediction_id: str):
+    from fpdf import FPDF
+    import io
+
+    prediction = await db.predictions.find_one(
+        {"id": prediction_id},
+        {"_id": 0}
+    )
+
+    if not prediction:
+        raise HTTPException(status_code=404, detail="Prediction not found")
+
+    ts = prediction.get('timestamp', '')
+    if isinstance(ts, str):
+        try:
+            ts = datetime.fromisoformat(ts).strftime('%Y-%m-%d %H:%M:%S UTC')
+        except Exception:
+            pass
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font('Helvetica', 'B', 22)
+    pdf.cell(0, 14, 'Dental Implant Detection Report', new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(6)
+
+    pdf.set_draw_color(200, 200, 200)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(6)
+
+    pdf.set_font('Helvetica', '', 12)
+    pdf.cell(0, 8, f"Date:  {ts}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, f"Filename:  {prediction.get('original_filename', 'N/A')}", new_x="LMARGIN", new_y="NEXT")
+
+    detected = prediction.get('implant_detected', False)
+    status = 'IMPLANT DETECTED' if detected else 'NO IMPLANT DETECTED'
+    pdf.ln(4)
+    pdf.set_font('Helvetica', 'B', 14)
+    if detected:
+        pdf.set_text_color(16, 185, 129)
+    else:
+        pdf.set_text_color(244, 63, 94)
+    pdf.cell(0, 10, f"Result:  {status}", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_text_color(0, 0, 0)
+
+    confidence = prediction.get('confidence')
+    if confidence:
+        pdf.set_font('Helvetica', '', 12)
+        pdf.cell(0, 8, f"Confidence:  {confidence * 100:.1f}%", new_x="LMARGIN", new_y="NEXT")
+
+    detections = prediction.get('detections', [])
+    pdf.cell(0, 8, f"Total Detections:  {len(detections)}", new_x="LMARGIN", new_y="NEXT")
+
+    if detections:
+        pdf.ln(6)
+        pdf.set_font('Helvetica', 'B', 12)
+        pdf.cell(0, 8, 'Detection Details:', new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font('Helvetica', '', 10)
+        for i, det in enumerate(detections):
+            pdf.cell(0, 7, f"  #{i+1}  Class: {det.get('class_name', 'N/A')}  |  Confidence: {det.get('confidence', 0)*100:.1f}%  |  Position: ({det.get('x', 0):.0f}, {det.get('y', 0):.0f})", new_x="LMARGIN", new_y="NEXT")
+
+    buf = io.BytesIO()
+    buf.write(pdf.output())
+    buf.seek(0)
+
+    filename = f"dental-report-{prediction_id}.pdf"
+    return StreamingResponse(
+        buf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 app.include_router(api_router)
 
