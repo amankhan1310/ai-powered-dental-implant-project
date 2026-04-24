@@ -26,7 +26,8 @@ api_router = APIRouter(prefix="/api")
 
 ROBOFLOW_API_KEY = os.environ.get('ROBOFLOW_API_KEY')
 ROBOFLOW_MODEL_ID = os.environ.get('ROBOFLOW_MODEL_ID')
-UPLOADS_DIR = Path(os.environ.get('UPLOADS_DIR', str(ROOT_DIR / 'uploads')))
+UPLOADS_DIR = Path(os.getenv("UPLOADS_DIR", "uploads"))
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 APP_NAME = "dental-implant-detector"
 
 class Detection(BaseModel):
@@ -49,29 +50,22 @@ class PredictionResult(BaseModel):
     raw_response: dict
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-def init_storage():
-    """Create local uploads directory if it doesn't exist."""
-    UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-    logging.info(f"Local storage ready at {UPLOADS_DIR}")
+async def put_object(path: str, data: bytes, content_type: str):
+    """Write file to local disk. Returns the storage path."""
+    file_path = UPLOADS_DIR / path
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_bytes(data)
+    return path
 
-def put_object(path: str, data: bytes, content_type: str) -> dict:
-    """Write file to local disk. Returns dict with path and size."""
-    full_path = UPLOADS_DIR / path
-    full_path.parent.mkdir(parents=True, exist_ok=True)
-    full_path.write_bytes(data)
-    return {"path": path, "size": len(data)}
-
-def get_object(path: str) -> tuple:
-    """Read file from local disk. Returns (bytes, content_type)."""
-    full_path = UPLOADS_DIR / path
-    if not full_path.is_file():
+async def get_object(path: str):
+    """Read file from local disk. Returns bytes."""
+    file_path = UPLOADS_DIR / path
+    if not file_path.exists():
         raise FileNotFoundError(f"File not found: {path}")
-    content_type = mimetypes.guess_type(str(full_path))[0] or "application/octet-stream"
-    return full_path.read_bytes(), content_type
+    return file_path.read_bytes()
 
 @app.on_event("startup")
 async def startup():
-    init_storage()
     logging.info("Application started successfully")
 
 @api_router.post("/upload-and-detect")
@@ -94,7 +88,7 @@ async def upload_and_detect(file: UploadFile = File(...)):
         unique_id = str(uuid.uuid4())
         storage_path = f"{APP_NAME}/uploads/{unique_id}.{ext}"
         
-        result = put_object(
+        result = await put_object(
             storage_path,
             file_data,
             file.content_type or "image/jpeg"
@@ -159,7 +153,8 @@ async def upload_and_detect(file: UploadFile = File(...)):
 @api_router.get("/images/{path:path}")
 async def get_image(path: str):
     try:
-        data, content_type = get_object(path)
+        data = await get_object(path)
+        content_type = mimetypes.guess_type(path)[0] or "application/octet-stream"
         return Response(content=data, media_type=content_type)
     except Exception as e:
         raise HTTPException(status_code=404, detail="Image not found")
