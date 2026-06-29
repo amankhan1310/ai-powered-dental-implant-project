@@ -7,9 +7,8 @@ import { UploadCloud, Scan, History, Download, Code, CheckCircle, XCircle, Activ
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = "http://127.0.0.1:8000";
 const API = `${BACKEND_URL}/api`;
-
 function PdfExportButton({ predictionId }) {
   const [showFallback, setShowFallback] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -278,15 +277,64 @@ function UploadPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-8">
-                <div className="bg-zinc-950 border border-zinc-800 rounded-md p-6">
-                  <img
-                    src={`${BACKEND_URL}${result.image_url}`}
-                    alt="Analyzed"
-                    className="w-full h-auto rounded-md"
-                    data-testid="result-image"
-                  />
-                </div>
-              </div>
+  <div className="bg-zinc-950 border border-zinc-800 rounded-md p-6">
+    <div className="relative inline-block w-full">
+      <img
+        src={`${BACKEND_URL}${result.image_url}`}
+        alt="Analyzed"
+        className="w-full h-auto rounded-md"
+        data-testid="result-image"
+      />
+
+      {result?.detections?.map((det, index) => {
+        const imageWidth = result?.raw_response?.image?.width || 1;
+        const imageHeight = result?.raw_response?.image?.height || 1;
+
+        const scaleX = 100 / imageWidth;
+        const scaleY = 100 / imageHeight;
+
+        const left = (det.x - det.width / 2) * scaleX;
+        const top = (det.y - det.height / 2) * scaleY;
+        const width = det.width * scaleX;
+        const height = det.height * scaleY;
+
+        return (
+          <div key={index}>
+            <div
+              style={{
+                position: "absolute",
+                left: `${left}%`,
+                top: `${top}%`,
+                width: `${width}%`,
+                height: `${height}%`,
+                border: "3px solid #00ff88",
+                boxSizing: "border-box",
+                pointerEvents: "none",
+              }}
+            />
+
+            <div
+              style={{
+                position: "absolute",
+                left: `${left}%`,
+                top: `${Math.max(top - 4, 0)}%`,
+                background: "#00ff88",
+                color: "black",
+                padding: "2px 6px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                borderRadius: "4px",
+                pointerEvents: "none",
+              }}
+            >
+              {(det.confidence * 100).toFixed(1)}%
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</div>
 
               <div className="lg:col-span-4 space-y-6">
                 <div

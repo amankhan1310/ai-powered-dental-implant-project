@@ -89,3 +89,12 @@ credentials.json
 *.pem
 *.key
 .credentials
+
+# Backend uploads
+backend/uploads/
+
+# Mongo / local db temp files (optional)
+*.db
+
+# Python virtual env inside backend
+backend/venv/
