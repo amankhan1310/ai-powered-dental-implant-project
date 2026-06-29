@@ -191,14 +191,73 @@ async def get_prediction_pdf(prediction_id: str):
 
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Helvetica", "B", 22)
-    pdf.cell(0, 14, "Dental Implant Detection Report")
 
-    buf = io.BytesIO()
-    pdf.output(buf)
+    # Title
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.cell(0, 12, "Dental Implant Detection Report", ln=True)
+
+    pdf.ln(8)
+
+    # Metadata
+    pdf.set_font("Helvetica", "", 12)
+
+    pdf.cell(0, 10, f"Filename: {prediction['original_filename']}", ln=True)
+
+    pdf.cell(
+        0,
+        10,
+        f"Implant Detected: {'YES' if prediction['implant_detected'] else 'NO'}",
+        ln=True
+    )
+
+    confidence = prediction.get("confidence")
+    confidence_text = (
+        f"{confidence * 100:.2f}%"
+        if confidence is not None else "N/A"
+    )
+
+    pdf.cell(0, 10, f"Confidence: {confidence_text}", ln=True)
+
+    pdf.cell(
+        0,
+        10,
+        f"Detections Count: {len(prediction.get('detections', []))}",
+        ln=True
+    )
+
+    pdf.ln(8)
+
+    # Clinical Summary
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, "Clinical Summary", ln=True)
+
+    pdf.set_font("Helvetica", "", 12)
+
+    if prediction["implant_detected"]:
+        summary = (
+            "Dental implants were detected in the uploaded radiograph. "
+            "Clinical evaluation is recommended to verify implant "
+            "position, angulation, and surrounding bone quality."
+        )
+    else:
+        summary = (
+            "No dental implants were detected in the uploaded radiograph."
+        )
+
+    pdf.multi_cell(0, 8, summary)
+
+    # Return PDF
+    pdf_bytes = bytes(pdf.output(dest="S"))
+    buf = io.BytesIO(pdf_bytes)
     buf.seek(0)
 
-    return StreamingResponse(buf, media_type="application/pdf")
+    return StreamingResponse(
+        buf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": "attachment; filename=dental_report.pdf"
+        }
+    )
 
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
