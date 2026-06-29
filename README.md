@@ -118,7 +118,7 @@ Generates downloadable PDF reports containing:
 ## Author
 
 **Aman Yahya Khan**
-AI / ML Engineer| Computer Vision | Full-Stack AI Development
+AI / ML Engineer | Computer Vision | Full-Stack AI Development
 Pune, Maharashtra, India
 
 GitHub: github.com/amankhan1310
